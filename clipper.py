@@ -3,7 +3,8 @@
 Clipboard watcher for macOS with small conversational context.
 
 - Polls the clipboard every second
-- When it changes, sends the new text (plus recent history) to Gemini
+- When it changes, checks if it starts with "??"
+- If so, sends the text (minus prefix) to Gemini
 - Copies the model reply back to the clipboard
 """
 
@@ -15,21 +16,23 @@ from google import genai
 from google.genai import types
 
 POLL_INTERVAL_SECONDS = 1.0
-CONTEXT_CHAR_LIMIT = 4000        # rough cap on total chars of history
-HISTORY_MAX_EXCHANGES = 5        # max past Q/A pairs to keep
+CONTEXT_CHAR_LIMIT = 4000  # rough cap on total chars of history
+HISTORY_MAX_EXCHANGES = 5  # max past Q/A pairs to keep
 
 SYSTEM_PROMPT = """
-You are a clipboard based helper for a programmer and university student.
+You are a clipboard based helper for a programmer and university student using Jupyter Notebooks.
 
 Rules:
-- The clipboard text is the user's current query. Previous turns you see are recent context only; use them when obviously relevant.
-- Answer in the same language as the query.
-- If the query explicitly asks for code, or is clearly code that needs completing, fixing, or rewriting:
-  - Respond with code only, in a single fenced code block, in the requested language.
-  - No explanations, no comments, no extra prose.
-- Otherwise respond with a short, direct explanation, at most three sentences. Use a short bullet list only if it clearly helps.
-- Never include greetings, sign offs, or meta discussion about being an AI.
-- If the query is ambiguous, choose the most likely meaning for a CS / maths student and answer that directly.
+- The clipboard text is the user's current query. Previous turns you see are recent context only.
+- If the query asks for code or is code-related:
+  - Provide ONLY the raw code.
+  - NO markdown formatting (no backticks, no language headers).
+  - NO comments in the code unless absolutely critical for complex logic.
+  - NO explanations, intro, or outro text.
+  - The output must be ready to paste directly into a Jupyter cell and run immediately.
+- If the query is purely conceptual (not code):
+  - Respond with a short, direct explanation (max 3 sentences).
+- Never include greetings, sign offs, or meta discussion.
 """
 
 client = genai.Client()  # uses GEMINI_API_KEY or GOOGLE_API_KEY from env
@@ -144,7 +147,9 @@ def query_model(user_text: str) -> str:
 
 
 def main() -> None:
-    print("Clipboard watcher started. Press Ctrl+C to stop.")
+    print(
+        "Clipboard watcher started. Copy text starting with '??' to trigger. Press Ctrl+C to stop."
+    )
     last_seen = get_clipboard()
     last_response = ""
 
@@ -162,21 +167,27 @@ def main() -> None:
                 last_seen = current
             else:
                 user_text = current.strip()
-                if user_text:
-                    print("New clipboard text detected, querying model...")
-                    answer = query_model(user_text)
-                    if answer:
-                        # Update history with this new turn
-                        history.append((user_text, answer))
-                        trim_history()
+                if user_text.startswith("??"):
+                    print("Trigger detected, querying model...")
+                    query_text = user_text[2:].strip()
+                    if query_text:
+                        answer = query_model(query_text)
+                        if answer:
+                            # Update history with this new turn
+                            history.append((query_text, answer))
+                            trim_history()
 
-                        set_clipboard(answer)
-                        last_response = answer
-                        last_seen = answer
-                        print("Clipboard updated with model response.")
+                            set_clipboard(answer)
+                            last_response = answer
+                            last_seen = answer
+                            print("Clipboard updated with model response.")
+                        else:
+                            last_seen = current
+                            print("Model returned empty response, doing nothing.")
                     else:
                         last_seen = current
-                        print("Model returned empty response, doing nothing.")
+                else:
+                    last_seen = current
 
         time.sleep(POLL_INTERVAL_SECONDS)
 
