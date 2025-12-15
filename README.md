@@ -8,9 +8,9 @@ This tool is designed for learning and productivity. **I am not responsible if t
 
 ## What It Does
 
-Clipper runs in the background and monitors your macOS clipboard. When it detects new text:
+Clipper runs in the background and monitors your macOS clipboard. When it detects new text that starts with `??` (double question mark trigger), it:
 
-1. **Sends it to Gemini AI** along with recent conversation history for context
+1. **Strips the trigger and sends the rest to Gemini AI** along with recent conversation history for context
 2. **Gets an intelligent response** tailored for programmers and students
 3. **Replaces your clipboard** with the AI's answer
 4. **Maintains context** across multiple clipboard operations
@@ -36,12 +36,14 @@ Perfect for quick code fixes, concept explanations, or formatting snippets witho
 ## Installation
 
 1. **Clone the repository:**
+
    ```bash
    git clone https://github.com/yourusername/clipper.git
    cd clipper
    ```
 
 2. **Install dependencies:**
+
    ```bash
    pip install google-genai
    ```
@@ -61,21 +63,25 @@ Perfect for quick code fixes, concept explanations, or formatting snippets witho
    source ~/.zshrc
    ```
 
+   Prefer a file-based setup? Copy `GEMINI_API_KEY.txt.example` to `GEMINI_API_KEY.txt` (next to `clipper.py`) and paste your key inside. The template stays committed while the real file is ignored, so collaborators can drop in their own keys after cloning. Clipper automatically loads whichever option you configure.
+
 ## Usage
 
 1. **Start the watcher:**
+
    ```bash
    python3 clipper.py
    ```
 
-2. **Copy something** (⌘C) - any text, code snippet, or question
+2. **Copy something that begins with `??`** (⌘C) - for example, `?? fix this python loop` followed by buggy code. Anything without the trigger is ignored so you can keep normal clipboard usage.
 
 3. **Paste** (⌘V) - you'll get the AI's response instead!
 
 **Example workflow:**
-- Copy: `fix this python loop` followed by buggy code
+
+- Copy: `?? fix this python loop` followed by buggy code
 - Paste: Get corrected code ready to use
-- Copy: `what is a linked list`
+- Copy: `?? what is a linked list`
 - Paste: Get a concise explanation
 
 ## How It Works
@@ -115,6 +121,7 @@ You can adjust these constants in `clipper.py`:
 ## System Prompt
 
 Clipper uses a specialized system prompt that:
+
 - Provides code-only responses when you need code
 - Gives brief explanations for conceptual questions
 - Responds in the same language as your query
@@ -138,10 +145,6 @@ Press `Ctrl+C` in the terminal where Clipper is running.
 - API rate limits apply (Gemini free tier is generous)
 - Not suitable for very large code files (stays under context limits)
 
-## Privacy Note
-
-Your clipboard contents are sent to Google's Gemini API. Don't copy sensitive information (passwords, API keys, personal data) while Clipper is running.
-
 ## License
 
 MIT License - feel free to modify and distribute.
@@ -149,6 +152,7 @@ MIT License - feel free to modify and distribute.
 ## Contributing
 
 Issues and pull requests welcome! Potential improvements:
+
 - Cross-platform clipboard support
 - GUI for starting/stopping
 - Custom system prompts

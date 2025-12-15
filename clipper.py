@@ -8,9 +8,11 @@ Clipboard watcher for macOS with small conversational context.
 - Copies the model reply back to the clipboard
 """
 
+import os
 import subprocess
 import time
-from typing import List, Tuple
+from pathlib import Path
+from typing import List, Optional, Tuple
 
 from google import genai
 from google.genai import types
@@ -35,10 +37,37 @@ Rules:
 - Never include greetings, sign offs, or meta discussion.
 """
 
-client = genai.Client()  # uses GEMINI_API_KEY or GOOGLE_API_KEY from env
+API_KEY_FILENAME = "GEMINI_API_KEY.txt"
+_client: Optional[genai.Client] = None
 
 # Simple in-memory history: list of (user_text, model_reply)
 history: List[Tuple[str, str]] = []
+
+
+def _resolve_api_key() -> Optional[str]:
+    env_key = os.getenv("GEMINI_API_KEY") or os.getenv("GOOGLE_API_KEY")
+    if env_key:
+        return env_key.strip()
+
+    file_path = Path(__file__).with_name(API_KEY_FILENAME)
+    if file_path.exists():
+        key = file_path.read_text(encoding="utf-8").strip()
+        if key:
+            return key
+
+    return None
+
+
+def get_client() -> genai.Client:
+    global _client
+    if _client is None:
+        api_key = _resolve_api_key()
+        if not api_key:
+            raise RuntimeError(
+                "Set GEMINI_API_KEY/GOOGLE_API_KEY or create GEMINI_API_KEY.txt with your key."
+            )
+        _client = genai.Client(api_key=api_key)
+    return _client
 
 
 def get_clipboard() -> str:
@@ -105,6 +134,12 @@ def build_contents(user_text: str):
 def query_model(user_text: str) -> str:
     """Send text (with context) to Gemini and return the response text."""
     contents = build_contents(user_text)
+
+    try:
+        client = get_client()
+    except RuntimeError as e:
+        print(e)
+        return ""
 
     try:
         response = client.models.generate_content(

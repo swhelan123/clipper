@@ -1,0 +1,9 @@
+# Gemini API Key Placeholder
+# ----------------------------------------
+# Copy this file to GEMINI_API_KEY.txt (same directory as clipper.py)
+# and replace the text below with your actual key.
+# Keep GEMINI_API_KEY.txt out of version control—it's already ignored.
+# The watcher will load your key either from this file or from the
+# GEMINI_API_KEY / GOOGLE_API_KEY environment variables.
+
+PASTE_YOUR_KEY_HERE

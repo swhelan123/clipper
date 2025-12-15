@@ -1,0 +1,53 @@
+# macOS clutter
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Python cache and bytecode
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Virtual environments
+.venv/
+venv/
+env/
+ENV/
+
+# Build / distribution artifacts
+build/
+dist/
+*.egg-info/
+.eggs/
+pip-wheel-metadata/
+
+# Logs and coverage
+*.log
+.coverage
+.coverage.*
+coverage.xml
+htmlcov/
+.pytest_cache/
+.cache/
+nosetests.xml
+
+# Type checker / lint caches
+.mypy_cache/
+.dmypy.json
+dmypy.json
+.ruff_cache/
+
+# Tools
+.tox/
+.nox/
+*.code-workspace
+.vscode/
+.idea/
+
+# Local environment files
+.env
+.env.*
+*.env
+
+# API key storage (tracked template file should use a different name)
+GEMINI_API_KEY.txt
