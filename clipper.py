@@ -3,7 +3,7 @@
 Clipboard watcher for macOS with small conversational context.
 
 - Polls the clipboard every second
-- When it changes, checks if it starts with "??"
+- When it changes, checks if it starts with "#"
 - If so, sends the text (minus prefix) to Gemini
 - Copies the model reply back to the clipboard
 """
@@ -183,7 +183,7 @@ def query_model(user_text: str) -> str:
 
 def main() -> None:
     print(
-        "Clipboard watcher started. Copy text starting with '??' to trigger. Press Ctrl+C to stop."
+        "Clipboard watcher started. Copy text starting with '#' to trigger. Press Ctrl+C to stop."
     )
     last_seen = get_clipboard()
     last_response = ""
@@ -202,25 +202,32 @@ def main() -> None:
                 last_seen = current
             else:
                 user_text = current.strip()
-                if user_text.startswith("??"):
-                    print("Trigger detected, querying model...")
-                    query_text = user_text[2:].strip()
-                    if query_text:
-                        answer = query_model(query_text)
-                        if answer:
-                            # Update history with this new turn
-                            history.append((query_text, answer))
-                            trim_history()
+                if user_text.startswith("#"):
+                    if user_text.strip().lower() == "#clear":
+                        history.clear()
+                        set_clipboard("History cleared.")
+                        last_response = "History cleared."
+                        last_seen = "History cleared."
+                        print("Conversation history cleared.")
+                    else:
+                        print("Trigger detected, querying model...")
+                        query_text = user_text[2:].strip()
+                        if query_text:
+                            answer = query_model(query_text)
+                            if answer:
+                                # Update history with this new turn
+                                history.append((query_text, answer))
+                                trim_history()
 
-                            set_clipboard(answer)
-                            last_response = answer
-                            last_seen = answer
-                            print("Clipboard updated with model response.")
+                                set_clipboard(answer)
+                                last_response = answer
+                                last_seen = answer
+                                print("Clipboard updated with model response.")
+                            else:
+                                last_seen = current
+                                print("Model returned empty response, doing nothing.")
                         else:
                             last_seen = current
-                            print("Model returned empty response, doing nothing.")
-                    else:
-                        last_seen = current
                 else:
                     last_seen = current
 
