@@ -8,18 +8,22 @@ This tool is designed for learning and productivity. **I am not responsible if t
 
 ## What It Does
 
-Clipper runs in the background and monitors your macOS clipboard. When it detects new text that starts with `??` (double question mark trigger), it:
+Clipper runs in the background and monitors your macOS clipboard. When it detects new text that starts with `#` (double question mark trigger), it:
 
 1. **Strips the trigger and sends the rest to Gemini AI** along with recent conversation history for context
 2. **Gets an intelligent response** tailored for programmers and students
 3. **Replaces your clipboard** with the AI's answer
 4. **Maintains context** across multiple clipboard operations
 
+It also watches your screenshot folder. Take a screenshot (⌘⇧4) and Clipper sends it to Gemini, shows the answer in the menu bar, and copies it to your clipboard.
+
 Perfect for quick code fixes, concept explanations, or formatting snippets without leaving your workflow.
 
 ## Features
 
 - 🔄 **Automatic clipboard monitoring** - polls every second
+- 📸 **Screenshot watching** - new screenshots are sent to Gemini automatically (toggle from the menu)
+- 🖥️ **Menu bar app** - latest answer shows in the menu bar; click any line to copy the full reply
 - 💬 **Conversational context** - remembers recent exchanges (up to 5 Q&A pairs)
 - 🎯 **Smart response formatting**:
   - Code queries → clean code blocks only
@@ -45,7 +49,9 @@ Perfect for quick code fixes, concept explanations, or formatting snippets witho
 2. **Install dependencies:**
 
    ```bash
-   pip install google-genai
+   python3 -m venv .venv
+   source .venv/bin/activate
+   pip install google-genai rumps
    ```
 
 3. **Set up your API key:**
@@ -70,18 +76,19 @@ Perfect for quick code fixes, concept explanations, or formatting snippets witho
 1. **Start the watcher:**
 
    ```bash
+   source .venv/bin/activate  # if not already active
    python3 clipper.py
    ```
 
-2. **Copy something that begins with `??`** (⌘C) - for example, `?? fix this python loop` followed by buggy code. Anything without the trigger is ignored so you can keep normal clipboard usage.
+2. **Copy something that begins with `#`** (⌘C) - for example, `# fix this python loop` followed by buggy code. Anything without the trigger is ignored so you can keep normal clipboard usage.
 
 3. **Paste** (⌘V) - you'll get the AI's response instead!
 
 **Example workflow:**
 
-- Copy: `?? fix this python loop` followed by buggy code
+- Copy: `# fix this python loop` followed by buggy code
 - Paste: Get corrected code ready to use
-- Copy: `?? what is a linked list`
+- Copy: `# what is a linked list`
 - Paste: Get a concise explanation
 
 ## How It Works
@@ -117,6 +124,9 @@ You can adjust these constants in `clipper.py`:
 - `POLL_INTERVAL_SECONDS`: How often to check clipboard (default: 1.0)
 - `CONTEXT_CHAR_LIMIT`: Max characters of history to maintain (default: 4000)
 - `HISTORY_MAX_EXCHANGES`: Max Q&A pairs to remember (default: 5)
+- `TRIGGER_PREFIX`: Clipboard prefix that triggers a query (default: `#`)
+
+Screenshots are read from the folder set in macOS (`defaults read com.apple.screencapture location`), falling back to `~/Desktop`. Override with the `CLIPPER_SCREENSHOT_DIR` environment variable.
 
 ## System Prompt
 
@@ -129,7 +139,7 @@ Clipper uses a specialized system prompt that:
 
 ## Stopping the Watcher
 
-Press `Ctrl+C` in the terminal where Clipper is running.
+Choose **Quit** from the Clipper menu bar icon.
 
 ## Tips
 

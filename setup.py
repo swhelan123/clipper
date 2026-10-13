@@ -19,7 +19,7 @@ OPTIONS = {
         "CFBundleVersion": "0.1.0",
         "CFBundleShortVersionString": "0.1.0",
     },
-    "packages": ["dotenv"],
+    "packages": ["rumps", "google.genai"],
 }
 
 setup(
